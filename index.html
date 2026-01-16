@@ -295,20 +295,6 @@
             100% { transform: translateX(-100%); }
         }
 
-        /* Typewriter Cursor */
-        .cursor-blink {
-            display: inline-block;
-            width: 8px;
-            height: 14px;
-            background-color: var(--neon-green);
-            animation: blink 1s step-end infinite;
-            vertical-align: middle;
-            margin-left: 2px;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-
         /* Gradient Animation Keyframes */
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
@@ -407,10 +393,7 @@
                     <div class="text-center text-xs tracking-wider text-gray-300 font-bold uppercase">
                         Department of<br>Archives
                     </div>
-                    <!-- Typewriter URL Visual -->
-                    <div class="mt-2 text-center h-4">
-                        <span id="url-typewriter" class="text-[10px] text-green-400 font-mono"></span><span class="cursor-blink"></span>
-                    </div>
+                    <!-- Typewriter URL Visual REMOVED from Sidebar -->
                 </div>
 
                 <!-- PFP -->
@@ -563,7 +546,6 @@
         const volumeSlider = document.getElementById('volume-slider');
         const bgImage = document.getElementById('bg-image');
         const nowPlayingText = document.getElementById('now-playing-text');
-        const urlTypewriter = document.getElementById('url-typewriter');
         
         // Buttons
         const prevBtn = document.getElementById('prev-btn');
@@ -647,12 +629,16 @@
 
         function initAudioVisualizer() {
             try {
-                if (audioContext) return;
+                // If we already have a source node, don't create another one.
+                // This prevents the "echo" effect of multiple sources connected to destination.
+                if (source) return; 
 
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContext();
-                analyser = audioContext.createAnalyser();
+                if (!audioContext) {
+                    audioContext = new AudioContext();
+                }
                 
+                analyser = audioContext.createAnalyser();
                 analyser.fftSize = 512; 
                 analyser.smoothingTimeConstant = 0.8;
                 
@@ -730,7 +716,7 @@
             });
         }
 
-        // URL Typewriter Logic
+        // TAB TITLE Typewriter Logic
         const urlTexts = [
             "scp://secure/files/8991-STAR",
             "https://roblox.com/users/1725092598",
@@ -741,19 +727,25 @@
         let charIdx = 0;
         let isDeleting = false;
         let typeSpeed = 100;
+        const originalTitle = "SCP File: Starlight"; // Base title
 
         function typeUrlEffect() {
             const currentText = urlTexts[urlIdx];
-            
+            let displayText = "";
+
             if (isDeleting) {
-                urlTypewriter.innerText = currentText.substring(0, charIdx - 1);
+                displayText = currentText.substring(0, charIdx - 1);
                 charIdx--;
                 typeSpeed = 50;
             } else {
-                urlTypewriter.innerText = currentText.substring(0, charIdx + 1);
+                displayText = currentText.substring(0, charIdx + 1);
                 charIdx++;
                 typeSpeed = 100;
             }
+
+            // Blink cursor simulation for Title
+            const cursor = (Math.floor(Date.now() / 500) % 2 === 0) ? "|" : "";
+            document.title = displayText + cursor;
 
             if (!isDeleting && charIdx === currentText.length) {
                 // Finished typing, wait
@@ -810,7 +802,7 @@
             loadSong(randomIndex, false);
             
             runStartupSequence();
-            typeUrlEffect(); // Start URL visual
+            typeUrlEffect(); // Start Title Typewriter
         });
 
         // Logic for Y/N
@@ -828,12 +820,15 @@
                 audio.volume = 0.3; // Starting volume
                 updateVolumeFill(); // Init slider fill
                 
-                audio.play().then(() => {
-                     updatePlayPauseIcon(true);
-                }).catch(e => {
-                    console.log("Play failed, likely interaction needed or visualizer error");
-                    updatePlayPauseIcon(false);
-                });
+                // Play only once
+                if(audio.paused) {
+                    audio.play().then(() => {
+                         updatePlayPauseIcon(true);
+                    }).catch(e => {
+                        console.log("Play failed, likely interaction needed or visualizer error");
+                        updatePlayPauseIcon(false);
+                    });
+                }
                 
                 // Visual Transition
                 biosScreen.style.opacity = '0';
