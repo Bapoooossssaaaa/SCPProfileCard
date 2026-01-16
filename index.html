@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP File: Starlight</title>
+    <!-- Site Icon -->
+    <link rel="icon" type="image/png" href="https://github.com/Bapoooossssaaaa/SCPProfileCard/blob/main/Untitled%20design%20(27).png?raw=true">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for generic icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --neon-green: #00ff41;
+            --neon-red: #ff3333;
+            --neon-purple: #9d00ff; 
+            --main-white: #ffffff;
+            --glass-bg: rgba(10, 10, 12, 0.90);
+            --border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            background-color: #000;
+            color: #eee;
+        }
+
+        /* Selection styling */
+        ::selection {
+            background: var(--neon-purple);
+            color: white;
+        }
+
+        /* BIOS Screen */
+        #bios-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease-out;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Terminal Text Styling */
+        #terminal-output {
+            text-align: left;
+            width: 100%;
+            max-width: 600px;
+            color: #ccc;
+            margin-bottom: 2rem;
+            min-height: 200px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .terminal-line {
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .terminal-success { color: var(--neon-green); }
+        .terminal-warning { color: var(--neon-red); }
+        .terminal-highlight { color: var(--main-white); font-weight: bold; }
+
+        .bios-option {
+            cursor: pointer;
+            padding: 10px 20px;
+            transition: all 0.2s;
+            font-size: 2rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .bios-option:hover {
+            text-shadow: 0 0 10px currentColor;
+            transform: scale(1.1);
+        }
+
+        .option-y { color: var(--neon-green); }
+        .option-n { color: var(--neon-red); }
+        
+        #bios-controls {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+
+        /* Main Content Transition */
+        #main-content {
+            opacity: 0;
+            transition: opacity 2s ease-in;
+            visibility: hidden;
+            padding-bottom: 6rem;
+        }
+
+        /* Glassmorphism Card */
+        .profile-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border-top: 2px solid var(--main-white);
+        }
+
+        /* Social Icons Animation */
+        .social-icon-wrapper {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            transition: transform 0.3s;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .social-icon-wrapper:hover {
+            transform: scale(1.1);
+        }
+
+        .social-icon {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Discord specific logic */
+        #discord-icon-container .animated-icon {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #discord-icon-container:hover .static-icon {
+            display: none;
+        }
+        #discord-icon-container:hover .animated-icon {
+            display: block;
+        }
+
+        /* Roblox Recolor Filter (Red) */
+        .roblox-icon {
+            filter: brightness(0) saturate(100%) invert(18%) sepia(94%) saturate(7169%) hue-rotate(357deg) brightness(94%) contrast(116%);
+        }
+
+        .hover-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            border: 1px solid var(--main-white);
+            color: var(--main-white);
+        }
+
+        .social-icon-wrapper:hover .hover-label {
+            opacity: 1;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--main-white); 
+        }
+
+        /* Background Image */
+        #bg-image {
+            position: fixed;
+            top: -10px;
+            left: -10px;
+            width: calc(100% + 20px);
+            height: calc(100% + 20px);
+            background-image: url('https://github.com/Bapoooossssaaaa/SCPProfileCard/blob/main/Untitled%20design%20(28).png?raw=true');
+            background-size: cover;
+            background-position: center;
+            /* Initial State: High Blur, Normal Scale */
+            filter: blur(10px) brightness(0.6);
+            transform: scale(1);
+            z-index: -1;
+            /* Transition for the audio reactivity */
+            transition: transform 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1), filter 0.1s ease-out; 
+            will-change: transform, filter;
+        }
+
+        .level-header {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            border-top: 1px solid var(--neon-purple); /* Stays Purple */
+            border-bottom: 1px solid var(--neon-purple); /* Stays Purple */
+        }
+
+        /* Glitch effect for denied text */
+        .glitch-text {
+            animation: glitch 1s linear infinite;
+        }
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+
+        /* Audio Player Styling */
+        .audio-player-container {
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            width: 100%;
+            max-width: 300px; 
+        }
+        @media (min-width: 768px) {
+            .audio-player-container {
+                width: auto;
+            }
+        }
+        
+        /* Volume Slider Customization */
+        input[type=range] {
+            -webkit-appearance: none; /* Remove default styling */
+            width: 100%;
+            background: transparent;
+            cursor: pointer;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2); /* Unfilled track color */
+            border-radius: 2px;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -4px; /* Center thumb */
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* Marquee & Wavy Text Animation */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+        .marquee {
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll-left 15s linear infinite;
+            color: white;
+        }
+        
+        /* Wavy Bounce Animation for letters */
+        .wavy-char {
+            display: inline-block;
+            animation: waveBounce 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes waveBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Typewriter Cursor */
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background-color: var(--neon-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Gradient Animation Keyframes */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        /* Gradient Text Classes */
+        .text-trans-gradient {
+            background: linear-gradient(90deg, #5BCEFA, #F5A9B8, #FFFFFF, #F5A9B8, #5BCEFA, #F5A9B8, #FFFFFF, #F5A9B8, #5BCEFA);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            display: inline-block;
+            animation: gradientShift 6s linear infinite;
+        }
+
+        .text-bi-gradient {
+            background: linear-gradient(90deg, #D60270, #9B4F96, #0038A8, #9B4F96, #D60270, #9B4F96, #0038A8);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            display: inline-block;
+            animation: gradientShift 6s linear infinite;
+        }
+
+        /* Utility classes */
+        .text-neon-purple { color: var(--neon-purple); }
+        .text-neon-red { color: var(--neon-red); }
+        .border-neon-purple { border-color: var(--neon-purple); }
+    </style>
+</head>
+<body>
+
+    <!-- BIOS / STARTUP SCREEN -->
+    <div id="bios-screen">
+        <div id="terminal-output">
+            <!-- JavaScript will populate this -->
+        </div>
+        
+        <div id="bios-controls">
+            <p class="text-3xl mb-12 tracking-widest text-white">ACCESS RESTRICTED FILE?</p>
+            <div class="flex gap-12 justify-center">
+                <div class="bios-option option-y" onclick="enterSite('Y')" role="button" tabindex="0">[ Y ]</div>
+                <div class="bios-option option-n" onclick="enterSite('N')" role="button" tabindex="0">[ N ]</div>
+            </div>
+            <p id="denied-msg" class="mt-8 text-red-600 text-2xl font-bold hidden">ACCESS DENIED. TERMINATING CONNECTION.</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main-content" class="relative min-h-screen w-full flex items-center justify-center p-4 overflow-y-auto">
+        
+        <!-- Background Layer (Bass Reactive) -->
+        <div id="bg-image"></div>
+
+        <!-- Audio Player Widget -->
+        <div class="fixed bottom-4 right-4 z-40 audio-player-container p-3">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-music text-white animate-pulse"></i>
+                <div class="marquee-container">
+                    <p id="now-playing-text" class="text-xs marquee">NOW PLAYING: ...</p>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center justify-center gap-6 mt-1 mb-2">
+                <button id="prev-btn" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-backward-step"></i></button>
+                <button id="play-pause-btn" class="text-white hover:text-neon-green transition"><i class="fa-solid fa-pause"></i></button>
+                <button id="next-btn" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-forward-step"></i></button>
+            </div>
+
+            <!-- Volume -->
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-volume-low text-xs text-gray-400"></i>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
+                <i class="fa-solid fa-volume-high text-xs text-gray-400"></i>
+            </div>
+            
+            <audio id="bg-music" crossorigin="anonymous"></audio>
+        </div>
+
+        <!-- The Card -->
+        <div class="profile-card w-full max-w-5xl rounded-lg overflow-hidden flex flex-col md:flex-row relative">
+            
+            <!-- Sidebar / Visuals -->
+            <div class="w-full md:w-1/3 bg-black/60 p-6 flex flex-col items-center border-r border-gray-700">
+                
+                <div class="w-full mb-4">
+                    <div class="flex justify-between items-end border-b border-gray-600 pb-1 mb-2">
+                        <span class="text-xs text-gray-400">FILE_UID: 8991-STAR</span>
+                        <span class="text-xs text-neon-purple font-bold">LEVEL 5 CLEARANCE</span> <!-- Purple -->
+                    </div>
+                    <img src="https://github.com/Bapoooossssaaaa/SCPProfileCard/blob/main/Untitled%20design%20(27).png?raw=true" class="w-16 h-16 mx-auto mb-2 opacity-80" alt="SCP Logo">
+                    <div class="text-center text-xs tracking-wider text-gray-300 font-bold uppercase">
+                        Department of<br>Archives
+                    </div>
+                    <!-- Typewriter URL Visual -->
+                    <div class="mt-2 text-center h-4">
+                        <span id="url-typewriter" class="text-[10px] text-green-400 font-mono"></span><span class="cursor-blink"></span>
+                    </div>
+                </div>
+
+                <!-- PFP -->
+                <div class="relative w-48 h-48 mb-6 group">
+                    <img src="https://github.com/Bapoooossssaaaa/SCPProfileCard/blob/main/%5B%20REDACTED%20%5D.png?raw=true" alt="Profile" class="w-full h-full object-cover rounded-md border-2 border-gray-800 shadow-[0_0_15px_rgba(157,0,255,0.3)]">
+                </div>
+
+                <!-- Stats -->
+                <div class="w-full space-y-3 text-sm">
+                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                        <span class="text-gray-400">CODENAME</span>
+                        <span class="text-white font-bold">"STARLIGHT"</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                        <span class="text-gray-400">NAME</span>
+                        <span>Madelyn / Maddie</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                        <span class="text-gray-400">PRONOUNS</span>
+                        <span>She/Her</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                        <span class="text-gray-400">ROLE</span>
+                        <span>WLOC Creator/Faction HR+</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                        <span class="text-gray-400">AGE</span>
+                        <span>20</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                        <span class="text-gray-400">GENDER</span>
+                        <span class="text-trans-gradient">Trans-Female</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-1">
+                        <span class="text-gray-400">ORIENTATION</span>
+                        <span class="text-bi-gradient">Bisexual</span>
+                    </div>
+                </div>
+
+                <!-- Quote -->
+                <div class="mt-6 w-full text-center border-t border-gray-700 pt-4">
+                    <p class="text-xs text-white italic" style="font-family: 'Rajdhani', sans-serif;">
+                        "I will forever be the one whom you'll see in the dark to give you light."
+                    </p>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="w-full md:w-2/3 p-6 flex flex-col">
+                
+                <!-- Header Alert -->
+                <div class="level-header py-2 mb-6 text-center">
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-[0.2em] text-white" style="font-family: 'Rajdhani', sans-serif;">PERSONNEL DOSSIER</h1>
+                    <p class="text-xs text-neon-purple uppercase tracking-widest">Authorized Eyes Only // Memetic Kill Agents Disabled</p>
+                </div>
+
+                <div class="space-y-6 flex-grow overflow-y-auto pr-2 custom-scroll">
+                    
+                    <!-- Creator Stats -->
+                    <div class="bg-black/40 p-4 border-l-2 border-white">
+                        <h2 class="text-lg text-white font-bold mb-2 uppercase flex items-center">
+                            <i class="fa-solid fa-database mr-2"></i> Contribution Log
+                        </h2>
+                        <p class="text-sm text-gray-300">
+                            Site-45 Original Character Creator.<br>
+                            Current Status: <span class="text-green-400">7 Active OCs</span> | <span class="text-red-400">2 Retired OCs</span>
+                        </p>
+                    </div>
+
+                    <!-- Factions -->
+                    <div>
+                        <h2 class="text-lg text-white font-bold mb-2 uppercase border-b border-gray-700 inline-block">Current Assignments</h2>
+                        <ul class="space-y-2 mt-2 text-sm">
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-blue-500 mr-3 rounded-full"></span> <!-- Blue for Epsilon 4 -->
+                                <span class="font-bold mr-2">Epsilon-4 "The Black Archive"</span> 
+                                <span class="text-xs text-gray-400 font-mono tracking-tight">[HC, Morph Designer]</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-green-500 mr-3 rounded-full"></span> <!-- Green for AD -->
+                                <span class="font-bold mr-2">Administrative Department</span>
+                                <span class="text-xs text-gray-400 font-mono tracking-tight">[LR]</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Service History -->
+                    <div>
+                        <h2 class="text-lg text-gray-400 font-bold mb-2 uppercase border-b border-gray-700 inline-block">Service Record</h2>
+                        <div class="grid grid-cols-1 gap-2 text-sm text-gray-400">
+                            <div class="bg-gray-900/50 p-2 border-l border-gray-600">
+                                <strong class="text-white">World Peace Control Organization</strong><br>
+                                <span class="text-xs font-mono tracking-tight">[MR, Morph Designer Team]</span>
+                            </div>
+                            <div class="bg-gray-900/50 p-2 border-l border-gray-600">
+                                <strong class="text-white">Bureau of Paranormal Control</strong><br>
+                                <span class="text-xs font-mono tracking-tight">[MR]</span>
+                            </div>
+                            <div class="bg-gray-900/50 p-2 border-l border-gray-600">
+                                <strong class="text-white">Omnicron Rho</strong><br>
+                                <span class="text-xs font-mono tracking-tight">[MR, Media Team]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Socials Footer -->
+                <div class="mt-8 pt-4 border-t border-gray-700">
+                    <p class="text-xs text-center text-gray-500 mb-4 uppercase tracking-widest">Comm-Links</p>
+                    
+                    <div class="flex items-center justify-center space-x-8 md:space-x-12">
+                        <!-- Discord Icon -->
+                        <div class="social-icon-wrapper">
+                            <div id="discord-icon-container" class="w-full h-full">
+                               <img src="https://github.com/Bapoooossssaaaa/dsdsadsa/blob/main/discord-logo.png?raw=true" alt="Discord Icon Static" class="social-icon discord-static-icon static-icon object-contain">
+                               <img src="https://github.com/Bapoooossssaaaa/dsdsadsa/blob/main/discord.gif?raw=true" alt="Discord Icon Animated" class="social-icon animated-icon object-contain">
+                            </div>
+                            <div class="hover-label">darling.starlight</div>
+                        </div>
+
+                        <!-- VRChat Icon (Standard Logo Only) -->
+                        <a href="https://vrchat.com/home/user/usr_636a76a9-dee2-493a-8717-d48990a3c9a9" target="_blank" class="social-icon-wrapper">
+                            <div id="vrchat-icon-container" class="w-full h-full">
+                                <!-- Using standard SVG only -->
+                                <img src="https://github.com/Bapoooossssaaaa/dsdsadsa/blob/main/VRChat_Logo.svg.png?raw=true" alt="VRChat Logo" class="social-icon object-contain">
+                            </div>
+                            <div class="hover-label">『StarIsSleepy』</div>
+                        </a>
+
+                        <!-- Roblox Icon (Red Filter Applied) -->
+                        <a href="https://www.roblox.com/users/1725092598/profile" target="_blank" class="social-icon-wrapper">
+                            <img src="https://devforum-uploads.s3.dualstack.us-east-2.amazonaws.com/uploads/original/4X/0/e/e/0eeeb19633422b1241f4306419a0f15f39d58de9.png" alt="Roblox Logo" class="social-icon roblox-icon object-contain">
+                            <div class="hover-label">Roblox Profile</div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const biosScreen = document.getElementById('bios-screen');
+        const biosControls = document.getElementById('bios-controls');
+        const terminalOutput = document.getElementById('terminal-output');
+        const mainContent = document.getElementById('main-content');
+        const audio = document.getElementById('bg-music');
+        const deniedMsg = document.getElementById('denied-msg');
+        const volumeSlider = document.getElementById('volume-slider');
+        const bgImage = document.getElementById('bg-image');
+        const nowPlayingText = document.getElementById('now-playing-text');
+        const urlTypewriter = document.getElementById('url-typewriter');
+        
+        // Buttons
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+
+        // Playlist Data
+        const playlist = [
+            {
+                title: "LET THE WORLD BURN (Remix) - G-Eazy & Ari Abdul",
+                url: "https://raw.githubusercontent.com/Bapoooossssaaaa/SCPProfileCard/main/LET%20THE%20WORLD%20BURN%20(with%20G-Eazy%20&%20Ari%20Abdul)%20%20-%20Remix%20%5BOfficial%20Lyric%20Video%5D.mp3"
+            },
+            {
+                title: "Hero - Skyper (Slowed & Reverb)",
+                url: "https://raw.githubusercontent.com/Bapoooossssaaaa/SCPProfileCard/main/Skyper%20-%20Hero%20(Slowed_Reverb).mp3"
+            }
+        ];
+        
+        let currentSongIndex = 0;
+
+        // Audio Context for Bass Reactivity
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let source;
+        let usingFallbackVisualizer = false;
+
+        function loadSong(index, shouldAutoPlay = false) {
+            if (index < 0) index = playlist.length - 1;
+            if (index >= playlist.length) index = 0;
+            currentSongIndex = index;
+
+            audio.src = playlist[currentSongIndex].url;
+            // Update Text
+            nowPlayingText.innerText = "NOW PLAYING: " + playlist[currentSongIndex].title;
+            setupWavyText();
+            
+            // Auto play if requested (buttons) or if user is inside
+            if (shouldAutoPlay && mainContent.style.visibility === 'visible') {
+                 audio.play().then(() => {
+                    updatePlayPauseIcon(true);
+                 }).catch(e => {
+                    console.log("Auto play failed", e);
+                    updatePlayPauseIcon(false);
+                 });
+            }
+        }
+
+        function updatePlayPauseIcon(isPlaying) {
+            if (isPlaying) {
+                playPauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            } else {
+                playPauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            }
+        }
+
+        // Button Event Listeners
+        prevBtn.addEventListener('click', () => {
+            loadSong(currentSongIndex - 1, true);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            loadSong(currentSongIndex + 1, true);
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                updatePlayPauseIcon(true);
+            } else {
+                audio.pause();
+                updatePlayPauseIcon(false);
+            }
+        });
+
+        // Auto Next
+        audio.addEventListener('ended', () => {
+            loadSong(currentSongIndex + 1, true);
+        });
+
+
+        function initAudioVisualizer() {
+            try {
+                if (audioContext) return;
+
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContext();
+                analyser = audioContext.createAnalyser();
+                
+                analyser.fftSize = 512; 
+                analyser.smoothingTimeConstant = 0.8;
+                
+                source = audioContext.createMediaElementSource(audio);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                renderFrame();
+            } catch (e) {
+                console.log("Visualizer init failed, enabling fallback:", e);
+                usingFallbackVisualizer = true;
+                renderFrame(); // Start render loop anyway for fallback
+            }
+        }
+
+        let lastTime = 0;
+        function renderFrame(time) {
+            requestAnimationFrame(renderFrame);
+            
+            let scaleVal = 1;
+            let blurVal = 10;
+            
+            if (!usingFallbackVisualizer && analyser) {
+                // TRY REAL ANALYSIS
+                analyser.getByteFrequencyData(dataArray);
+
+                // Check if we are actually getting data (audio security might return 0s even if no error)
+                let bassSum = 0;
+                let bassCount = 10; 
+                for (let i = 0; i < bassCount; i++) {
+                    bassSum += dataArray[i];
+                }
+                
+                if (bassSum === 0 && !audio.paused) {
+                    // Audio is playing but data is 0 -> switch to simulation
+                     const pulse = (Math.sin(time / 200) + 1) / 2; // 0 to 1
+                     blurVal = 10 - (pulse * 2);
+                     scaleVal = 1 + (pulse * 0.02);
+                } else {
+                    // Real data
+                    let bassAverage = bassSum / bassCount;
+                    blurVal = 10 - (bassAverage / 255) * 5; 
+                    scaleVal = 1 + (bassAverage / 255) * 0.05;
+                }
+
+            } else {
+                // FALLBACK SIMULATION (If CORS blocked context entirely)
+                if (!audio.paused) {
+                    const pulse = (Math.sin(time / 250) + 1) / 2; // Simulated beat
+                    blurVal = 10 - (pulse * 3);
+                    scaleVal = 1 + (pulse * 0.03);
+                }
+            }
+
+            bgImage.style.filter = `blur(${blurVal}px) brightness(0.6)`;
+            bgImage.style.transform = `scale(${scaleVal})`;
+        }
+
+        // Wavy Text Logic
+        function setupWavyText() {
+            const text = nowPlayingText.innerText;
+            nowPlayingText.innerHTML = ''; // clear
+            
+            // Split text into spans
+            [...text].forEach((char, i) => {
+                const span = document.createElement('span');
+                span.innerText = char === ' ' ? '\u00A0' : char; // preserved spaces
+                span.classList.add('wavy-char');
+                // Stagger delay based on index
+                span.style.animationDelay = `${i * 0.1}s`; 
+                nowPlayingText.appendChild(span);
+            });
+        }
+
+        // URL Typewriter Logic
+        const urlTexts = [
+            "scp://secure/files/8991-STAR",
+            "https://roblox.com/users/1725092598",
+            "connection://site-45.secure",
+            "accessing_database..."
+        ];
+        let urlIdx = 0;
+        let charIdx = 0;
+        let isDeleting = false;
+        let typeSpeed = 100;
+
+        function typeUrlEffect() {
+            const currentText = urlTexts[urlIdx];
+            
+            if (isDeleting) {
+                urlTypewriter.innerText = currentText.substring(0, charIdx - 1);
+                charIdx--;
+                typeSpeed = 50;
+            } else {
+                urlTypewriter.innerText = currentText.substring(0, charIdx + 1);
+                charIdx++;
+                typeSpeed = 100;
+            }
+
+            if (!isDeleting && charIdx === currentText.length) {
+                // Finished typing, wait
+                isDeleting = true;
+                typeSpeed = 2000; // Wait before deleting
+            } else if (isDeleting && charIdx === 0) {
+                // Finished deleting, next string
+                isDeleting = false;
+                urlIdx = (urlIdx + 1) % urlTexts.length;
+                typeSpeed = 500;
+            }
+
+            setTimeout(typeUrlEffect, typeSpeed);
+        }
+
+        // Startup Sequence Text
+        const startupLines = [
+            { text: "> INITIALIZING SECURE CONNECTION...", delay: 200 },
+            { text: "> KERNEL_LOAD: [SUCCESS]", delay: 400, class: "terminal-success" },
+            { text: "> VERIFYING ENCRYPTION KEYS...", delay: 300 },
+            { text: "> [OK] SHA-256 HANDSHAKE COMPLETE.", delay: 300, class: "terminal-success" },
+            { text: "> ESTABLISHING UPLINK TO SITE-45 SERVER...", delay: 600 },
+            { text: "> USER IDENTITY: [REDACTED]", delay: 300 },
+            { text: "> FETCHING FILE_UID: 8991-STAR...", delay: 400 },
+            { text: "> WARNING: LEVEL 5 AUTHORIZATION REQUIRED.", delay: 400, class: "terminal-warning" },
+            { text: "> SCANNING BIOMETRICS...", delay: 800 },
+            { text: "> ACCESS GRANTED. WELCOME, PERSONNEL.", delay: 300, class: "terminal-highlight" }
+        ];
+
+        // Typewriter Logic
+        async function runStartupSequence() {
+            for (let line of startupLines) {
+                const lineEl = document.createElement('span');
+                lineEl.classList.add('terminal-line');
+                if (line.class) lineEl.classList.add(line.class);
+                terminalOutput.appendChild(lineEl);
+                
+                lineEl.textContent = line.text;
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                
+                await new Promise(r => setTimeout(r, line.delay));
+            }
+            
+            // Show controls after sequence
+            setTimeout(() => {
+                biosControls.style.opacity = '1';
+            }, 500);
+        }
+
+        // Start on load
+        window.addEventListener('load', () => {
+            // Randomly select starting song
+            const randomIndex = Math.floor(Math.random() * playlist.length);
+            loadSong(randomIndex, false);
+            
+            runStartupSequence();
+            typeUrlEffect(); // Start URL visual
+        });
+
+        // Logic for Y/N
+        function enterSite(choice) {
+            if (choice === 'Y') {
+                // Initialize Visualizer
+                initAudioVisualizer();
+
+                // Resume context if suspended (browser policy)
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                // Play Audio
+                audio.volume = 0.3; // Starting volume
+                updateVolumeFill(); // Init slider fill
+                
+                audio.play().then(() => {
+                     updatePlayPauseIcon(true);
+                }).catch(e => {
+                    console.log("Play failed, likely interaction needed or visualizer error");
+                    updatePlayPauseIcon(false);
+                });
+                
+                // Visual Transition
+                biosScreen.style.opacity = '0';
+                setTimeout(() => {
+                    biosScreen.style.display = 'none';
+                    mainContent.style.visibility = 'visible';
+                    mainContent.style.opacity = '1';
+                }, 1000);
+            } else {
+                deniedMsg.classList.remove('hidden');
+                deniedMsg.classList.add('glitch-text');
+                setTimeout(() => {
+                    location.reload(); // Simple reset
+                }, 2000);
+            }
+        }
+
+        // Keyboard Listener
+        document.addEventListener('keydown', (e) => {
+            if (biosScreen.style.display !== 'none' && biosControls.style.opacity === '1') {
+                if (e.key.toLowerCase() === 'y') enterSite('Y');
+                if (e.key.toLowerCase() === 'n') enterSite('N');
+            }
+        });
+
+        // Volume Control & Fill Logic
+        function updateVolumeFill() {
+            const val = volumeSlider.value * 100;
+            volumeSlider.style.background = `linear-gradient(to right, white ${val}%, rgba(255, 255, 255, 0.2) ${val}%)`;
+        }
+
+        volumeSlider.addEventListener('input', (e) => {
+            audio.volume = e.target.value;
+            updateVolumeFill();
+        });
+    </script>
+</body>
+</html>
